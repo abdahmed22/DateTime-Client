@@ -5,7 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/cenkalti/backoff"
 )
 
 func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
@@ -16,28 +20,26 @@ func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	// b := backoff.NewExponentialBackOff()
-	// b.MaxElapsedTime = 3 * time.Second
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 3 * time.Second
 
-	// var (
-	// 	res    *http.Response
-	// 	resErr error
-	// )
+	var (
+		res    *http.Response
+		resErr error
+	)
 
-	// retryable := func() error {
-	// 	res, resErr = c.httpClient.Do(req)
-	// 	return resErr
-	// }
+	retryable := func() error {
+		res, resErr = c.httpClient.Do(req)
+		return resErr
+	}
 
-	// defer res.Body.Close()
+	notify := func(err error, t time.Duration) {
+		log.Printf("error: %v happened at time: %v", err, t)
+	}
 
-	// err = backoff.Retry(retryable, b)
-	res, err := c.httpClient.Do(req)
-
-	defer res.Body.Close()
-
+	err = backoff.RetryNotify(retryable, b, notify)
 	if err != nil {
-		return "", err
+		log.Fatalf("error after retrying: %v", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -45,6 +47,8 @@ func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 	}
 
 	currentTime, err := io.ReadAll(res.Body)
+
+	defer res.Body.Close()
 
 	if err != nil {
 		return "", err
