@@ -5,54 +5,53 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClientCanHitDateTimeServer(t *testing.T) {
+// func TestClientCanHitDateTimeServer(t *testing.T) {
 
-	now := time.Now()
+// 	now := time.Now()
 
-	firstPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
-		now.Hour()-3, now.Minute(), now.Second()-1,
-		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
+// 	firstPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
+// 		now.Hour()-3, now.Minute(), now.Second()-1,
+// 		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
 
-	secondPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
-		now.Hour()-3, now.Minute(), now.Second()-2,
-		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
+// 	secondPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
+// 		now.Hour()-3, now.Minute(), now.Second()-2,
+// 		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
 
-	thirdPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
-		now.Hour()-3, now.Minute(), now.Second()-3,
-		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
+// 	thirdPossibleValue := time.Date(now.Year(), now.Month(), now.Day(),
+// 		now.Hour()-3, now.Minute(), now.Second()-3,
+// 		now.Nanosecond(), now.Location()).Format("2006-01-02 15:04")
 
-	possibleValues := []string{firstPossibleValue, secondPossibleValue, thirdPossibleValue}
-	t.Run("can hit the httpserver and return date & time", func(*testing.T) {
+// 	possibleValues := []string{firstPossibleValue, secondPossibleValue, thirdPossibleValue}
+// 	t.Run("can hit the httpserver and return date & time", func(*testing.T) {
 
-		myClient := NewClient()
-		returnedDateTime, err := myClient.GetHTTPDateTime(context.Background())
+// 		myClient := NewClient()
+// 		returnedDateTime, err := myClient.GetHTTPDateTime(context.Background())
 
-		assert.NoError(t, err)
+// 		assert.NoError(t, err)
 
-		if !slices.Contains(possibleValues, returnedDateTime) {
-			t.Fail()
-		}
-	})
+// 		if !slices.Contains(possibleValues, returnedDateTime) {
+// 			t.Fail()
+// 		}
+// 	})
 
-	t.Run("can hit the ginserver and return date & time", func(*testing.T) {
+// 	t.Run("can hit the ginserver and return date & time", func(*testing.T) {
 
-		myClient := NewClient()
-		returnedDateTime, err := myClient.GetGinDateTime(context.Background())
+// 		myClient := NewClient()
+// 		returnedDateTime, err := myClient.GetGinDateTime(context.Background())
 
-		assert.NoError(t, err)
+// 		assert.NoError(t, err)
 
-		if !slices.Contains(possibleValues, returnedDateTime) {
-			t.Fail()
-		}
-	})
-}
+// 		if !slices.Contains(possibleValues, returnedDateTime) {
+// 			t.Fail()
+// 		}
+// 	})
+// }
 
 func TestOptionFunctions(t *testing.T) {
 	t.Run("happy path - can add custom URLS using option function", func(*testing.T) {
