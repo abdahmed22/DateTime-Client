@@ -2,7 +2,11 @@
 package httpclient
 
 import (
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Client struct {
@@ -22,13 +26,18 @@ type JSONResponse struct {
 
 // NewClient creates a new client
 func NewClient(options ...Option) *Client {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+
 	client := &Client{
 		httpClient: http.DefaultClient,
-		httpURL:    "http://localhost:",
-		ginURL:     "http://localhost:",
-		httpPort:   "8090",
-		ginPort:    "8080",
-		endPoint:   "/datetime",
+		httpURL:    os.Getenv("HTTPURL"),
+		ginURL:     os.Getenv("GINURL"),
+		httpPort:   os.Getenv("HTTPPORT"),
+		ginPort:    os.Getenv("GINPORT"),
+		endPoint:   os.Getenv("ENDPOINT"),
 	}
 
 	for _, option := range options {
