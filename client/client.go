@@ -1,3 +1,4 @@
+// Package httpclient provides a testing enviroment to test datetime server.
 package httpclient
 
 import (
@@ -19,6 +20,7 @@ type JSONResponse struct {
 	Message string `json:"message"`
 }
 
+// NewClient creates a new client
 func NewClient(options ...Option) *Client {
 	client := &Client{
 		httpClient: http.DefaultClient,
@@ -35,6 +37,7 @@ func NewClient(options ...Option) *Client {
 	return client
 }
 
+// CustomURL provides the option to change default URLs for gin and http servers
 func CustomURL(httpURL string, ginURL string) Option {
 	return func(c *Client) {
 		c.ginURL = ginURL
@@ -42,6 +45,7 @@ func CustomURL(httpURL string, ginURL string) Option {
 	}
 }
 
+// CustomPort provides the option to change default Port numbers for gin and http servers
 func CustomPort(httpPort string, ginPort string) Option {
 	return func(c *Client) {
 		c.httpPort = httpPort
@@ -49,12 +53,14 @@ func CustomPort(httpPort string, ginPort string) Option {
 	}
 }
 
+// CustomEndPoint provides the option to change default endpoint
 func CustomEndPoint(endPoint string) Option {
 	return func(c *Client) {
 		c.endPoint = endPoint
 	}
 }
 
+// CustomClient provides the option to change default Client
 func CustomClient(httpClient *http.Client) Option {
 	return func(c *Client) {
 		c.httpClient = httpClient

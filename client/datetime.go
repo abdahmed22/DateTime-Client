@@ -1,3 +1,4 @@
+// Package httpclient provides a testing enviroment to test datetime server.
 package httpclient
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/cenkalti/backoff"
 )
 
+// GetHTTPDateTime mimics a user performing a request to a certain endpoint to the http server
 func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.httpURL+c.httpPort+c.endPoint, nil)
@@ -57,6 +59,7 @@ func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 	return string(currentTime), nil
 }
 
+// GetGinDateTime mimics a user performing a request to a certain endpoint to the gin server
 func (c *Client) GetGinDateTime(ctx context.Context) (string, error) {
 	var JSON JSONResponse
 
@@ -66,7 +69,27 @@ func (c *Client) GetGinDateTime(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	res, err := c.httpClient.Do(req)
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 3 * time.Second
+
+	var (
+		res    *http.Response
+		resErr error
+	)
+
+	retryable := func() error {
+		res, resErr = c.httpClient.Do(req)
+		return resErr
+	}
+
+	notify := func(err error, t time.Duration) {
+		log.Printf("error: %v happened at time: %v", err, t)
+	}
+
+	err = backoff.RetryNotify(retryable, b, notify)
+	if err != nil {
+		log.Fatalf("error after retrying: %v", err)
+	}
 
 	if err != nil {
 		return "", err

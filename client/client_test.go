@@ -84,7 +84,7 @@ func TestOptionFunctions(t *testing.T) {
 		assert.Equal(t, "/endpoint", myClient.endPoint)
 	})
 
-	t.Run("happy path - can add custom endpoint using option function", func(*testing.T) {
+	t.Run("happy path - can add custom client using option function", func(*testing.T) {
 
 		myClient := NewClient(
 			CustomClient(&http.Client{
