@@ -6,9 +6,16 @@ import (
 	"log"
 
 	client "github.com/codescalersinternships/DateTime-Client-Abdelrahman-Mahmoud/client"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+
 	fmt.Println("Client created")
 
 	myClient := client.NewClient()

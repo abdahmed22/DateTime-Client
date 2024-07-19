@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -19,30 +18,16 @@ func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.httpURL+c.httpPort+c.endPoint, nil)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 3 * time.Second
+	res, err := c.SendRequest(req, 5)
 
-	var (
-		res    *http.Response
-		resErr error
-	)
-
-	retryable := func() error {
-		res, resErr = c.httpClient.Do(req)
-		return resErr
-	}
-
-	notify := func(err error, t time.Duration) {
-		log.Printf("error: %v happened at time: %v", err, t)
-	}
-
-	err = backoff.RetryNotify(retryable, b, notify)
 	if err != nil {
-		log.Fatalf("error after retrying: %v", err)
+		return "", fmt.Errorf("faild to send request: %w", err)
 	}
+
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("unexpected status code")
@@ -50,10 +35,8 @@ func (c *Client) GetHTTPDateTime(ctx context.Context) (string, error) {
 
 	currentTime, err := io.ReadAll(res.Body)
 
-	defer res.Body.Close()
-
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read response: %w", err)
 	}
 
 	return string(currentTime), nil
@@ -66,33 +49,13 @@ func (c *Client) GetGinDateTime(ctx context.Context) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ginURL+c.ginPort+c.endPoint, nil)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 3 * time.Second
-
-	var (
-		res    *http.Response
-		resErr error
-	)
-
-	retryable := func() error {
-		res, resErr = c.httpClient.Do(req)
-		return resErr
-	}
-
-	notify := func(err error, t time.Duration) {
-		log.Printf("error: %v happened at time: %v", err, t)
-	}
-
-	err = backoff.RetryNotify(retryable, b, notify)
-	if err != nil {
-		log.Fatalf("error after retrying: %v", err)
-	}
+	res, err := c.SendRequest(req, 5)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("faild to send request: %w", err)
 	}
 
 	defer res.Body.Close()
@@ -103,8 +66,39 @@ func (c *Client) GetGinDateTime(ctx context.Context) (string, error) {
 
 	err = json.NewDecoder(res.Body).Decode(&JSON)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	return JSON.Message, nil
+}
+
+// SendRequest keeps sending request till the server responds for n seconds
+func (c *Client) SendRequest(req *http.Request, n int) (*http.Response, error) {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = time.Duration(n) * time.Second
+
+	var (
+		res    *http.Response
+		resErr error
+	)
+
+	retryable := func() error {
+		res, resErr = c.httpClient.Do(req)
+		if resErr != nil {
+			return fmt.Errorf("error after retrying: %w", resErr)
+		}
+		return nil
+	}
+
+	notify := func(err error, t time.Duration) {
+
+	}
+
+	err := backoff.RetryNotify(retryable, b, notify)
+
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
