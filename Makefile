@@ -1,7 +1,7 @@
 all: install_dependencies build_binaries format lint test 
 
 install_dependencies:
-	go get ./...
+	go mod tidy
 
 build_binaries: install_dependencies
 	go build -o ./httpclient main.go
